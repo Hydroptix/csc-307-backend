@@ -25,27 +25,36 @@ def hello_world():
 #     return users
 
 
-@app.route('/users/<id>', methods=['GET'])
-def get_user_by_id(id):
+@app.route('/users/<id>', methods=['GET', 'DELETE'])
+def user_by_id(id):
     if id:
-        if request.method == 'GET':
-            user = users['users_list'].get(id)
-            if user is None:
-                resp = jsonify(success=False, message="This user does not exist")
-                resp.status_code = 404
 
-                return resp
-
-            return user
-
-        else:
-            resp = jsonify(success=False, message="Can only get a user by its ID")
-            resp.status_code = 405
+        if id not in users['users_list']:
+            resp = jsonify(success=False, message="User ID does not exist")
+            resp.status_code = 404
 
             return resp
 
+        if request.method == 'GET':
+            user = users['users_list'].get(id)
+            return user
 
-@app.route('/users', methods=['GET', 'POST', 'DELETE'])
+        elif request.method == 'DELETE':
+
+            user_dict = users['users_list'].pop(id)
+
+            resp = jsonify(user_dict)
+            resp.status_code = 200
+            print(resp)
+            return resp
+
+    resp = jsonify(success=False)
+    resp.status_code = 400
+    return resp
+
+
+
+@app.route('/users', methods=['GET', 'POST'])
 def get_users():
     if request.method == 'GET':
 
@@ -81,19 +90,7 @@ def get_users():
 
         resp = jsonify(userToAdd)
         resp.status_code = 201
-        return userToAdd
-
-    elif request.method == 'DELETE':
-        userToDelete = request.get_json()
-        user_id = userToDelete.get('id')
-        if user_id is not None:
-            user_dict = users['users_list'].pop(user_id, None)
-
-            if user_dict is None:
-                resp = jsonify(success=False, message="User ID does not exist")
-                resp.status_code = 404
-            else:
-                return user_dict
+        return resp
 
 
 @app.route('/teapot')
