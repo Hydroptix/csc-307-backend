@@ -1,7 +1,12 @@
+import string
+import random
+
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+# bad security practice, but allow cross-origin resource sharing
+CORS(app)
 
 @app.route('/')
 def hello_world():
@@ -61,10 +66,22 @@ def get_users():
 
     elif request.method == 'POST':
         userToAdd = request.get_json()
-        users['users_list'].append(userToAdd)
-        resp = jsonify(success=True)
 
-        return resp
+        user_id = None
+        while user_id is None or user_id in users['users_list']:
+            user_id = ""
+            for i in range(3):
+                user_id += random.choice(string.ascii_lowercase)
+
+            for i in range(3):
+                user_id += str(random.randint(0,9))
+
+        userToAdd.update({'id': user_id})
+        users['users_list'].update({user_id: userToAdd})
+
+        resp = jsonify(userToAdd)
+        resp.status_code = 201
+        return userToAdd
 
     elif request.method == 'DELETE':
         userToDelete = request.get_json()
